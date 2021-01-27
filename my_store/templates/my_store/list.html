@@ -9,6 +9,8 @@
 </head>
 <body>
 <h1>Electronics</h1>
+
+<h3>{{ request.session.customer }}</h3>
 <ul>
     {% for item in items %}
         <li>{{ item }}</li>
@@ -56,7 +58,6 @@
 
 
     {% endif %}
-
 
 
 </div>

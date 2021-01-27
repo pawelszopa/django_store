@@ -16,9 +16,10 @@ def index(request):
     return HttpResponse("Hello there, store e-commerce front coming  here...")
 
 
+#  nigdy nie uzywaj csrf_exempt
 @csrf_exempt  # bez tego postman wali nam 403 na post zamiast 404 - django jest zabezpieczone wiec jak chcemy wyslac post to to dajemy
 # @cache_page(900) # uwaga to działa kiepsko - do tego trzeba memcache server!!!!!
-@gzip_page #gzip - obsluga wszystkich przegladarek, templatki mogą wtedy być przesyłane w zipie (szybciej działa - szybsze przesyłanieu )
+@gzip_page  # gzip - obsluga wszystkich przegladarek, templatki mogą wtedy być przesyłane w zipie (szybciej działa - szybsze przesyłanieu )
 @require_http_methods(["GET"])  # blokowanie inneych metod niz GET
 def electronics(request):
     items = ("Windows PC", "Apple Mac", "Apple iPhone", "Lenovo", "Samsung", "Google")
@@ -26,12 +27,29 @@ def electronics(request):
     if request.method == 'GET':
         paginator = Paginator(items, 2)  # dzielenie na podstrony
         pages = request.GET.get('page', 1)  # wysylamy requesta o pobranie pierwszej strony
+
+        name = "Igor"
+
         try:
             items = paginator.page(pages)
         except PageNotAnInteger:
             items = paginator.page(1)
 
-        return render(request, 'my_store/list.html', {'items': items})
+        if not request.session.has_key('customer'):
+            request.session['customer'] = name
+            print('Session value set.')
+
+        response = render(request, 'my_store/list.html', {'items': items})
+        if request.COOKIES.get('visits'):
+            value = int(request.COOKIES.get('visits'))
+            print('Getting Cookie')
+            response.set_cookie('visits', value + 1)
+        else:
+            value = 1
+            print("setting cookie")
+            response.set_cookie('visits', value)
+
+        return response
         # przekazujemy obiekt typu page dlatego item.has_other_pages atrybut jest w nim
     elif request.method == 'POST':
         return HttpResponseNotFound("Page not  Found")
